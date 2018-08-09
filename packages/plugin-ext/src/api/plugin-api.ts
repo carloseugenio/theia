@@ -186,7 +186,6 @@ export interface QuickOpenMain {
     $setItems(items: PickOpenItem[]): Promise<any>;
     $setError(error: Error): Promise<any>;
     $input(options: theia.InputBoxOptions, validateInput: boolean): Promise<string | undefined>;
-    $showOpenDialog(options: OpenDialogOptionsMain): Promise<string[] | undefined>;
 }
 
 export interface WindowStateExt {
@@ -195,6 +194,10 @@ export interface WindowStateExt {
 
 export interface WorkspaceExt {
     $onWorkspaceFoldersChanged(event: theia.WorkspaceFoldersChangeEvent): void;
+}
+
+export interface DialogsMain {
+    $showOpenDialog(options: OpenDialogOptionsMain): Promise<string[] | undefined>;
 }
 
 export enum EditorPosition {
@@ -553,6 +556,7 @@ export interface LanguagesMain {
 export const PLUGIN_RPC_CONTEXT = {
     COMMAND_REGISTRY_MAIN: <ProxyIdentifier<CommandRegistryMain>>createProxyIdentifier<CommandRegistryMain>('CommandRegistryMain'),
     QUICK_OPEN_MAIN: createProxyIdentifier<QuickOpenMain>('QuickOpenMain'),
+    DIALOGS_MAIN: createProxyIdentifier<DialogsMain>('DialogsMain'),
     MESSAGE_REGISTRY_MAIN: <ProxyIdentifier<MessageRegistryMain>>createProxyIdentifier<MessageRegistryMain>('MessageRegistryMain'),
     TEXT_EDITORS_MAIN: createProxyIdentifier<TextEditorsMain>('TextEditorsMain'),
     DOCUMENTS_MAIN: createProxyIdentifier<DocumentsMain>('DocumentsMain'),

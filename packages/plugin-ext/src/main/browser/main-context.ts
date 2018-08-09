@@ -29,6 +29,7 @@ import { OutputChannelRegistryMainImpl } from './output-channel-registry-main';
 import { WorkspaceService } from '@theia/workspace/lib/browser';
 import { TerminalServiceMainImpl } from './terminal-main';
 import { LanguagesMainImpl } from './languages-main';
+import { DialogsMainImpl } from './dialogs-main';
 
 export function setUpPluginApi(rpc: RPCProtocol, container: interfaces.Container): void {
     const commandRegistryMain = new CommandRegistryMainImpl(rpc, container);
@@ -36,6 +37,9 @@ export function setUpPluginApi(rpc: RPCProtocol, container: interfaces.Container
 
     const quickOpenMain = new QuickOpenMainImpl(rpc, container);
     rpc.set(PLUGIN_RPC_CONTEXT.QUICK_OPEN_MAIN, quickOpenMain);
+
+    const dialogsMain = new DialogsMainImpl(rpc, container);
+    rpc.set(PLUGIN_RPC_CONTEXT.DIALOGS_MAIN, dialogsMain);
 
     const messageRegistryMain = new MessageRegistryMainImpl(container);
     rpc.set(PLUGIN_RPC_CONTEXT.MESSAGE_REGISTRY_MAIN, messageRegistryMain);
