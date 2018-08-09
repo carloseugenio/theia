@@ -181,6 +181,21 @@ export interface OpenDialogOptionsMain {
     filters?: { [name: string]: string[] };
 }
 
+/**
+ * Options to configure the behaviour of the [workspace folder](#WorkspaceFolder) pick UI.
+ */
+export interface WorkspaceFolderPickOptionsMain {
+    /**
+     * An optional string to show as place holder in the input box to guide the user what to pick on.
+     */
+    placeHolder?: string;
+
+    /**
+     * Set to `true` to keep the picker open when focus moves to another part of the editor or to another window.
+     */
+    ignoreFocusOut?: boolean;
+}
+
 export interface QuickOpenMain {
     $show(options: PickOptions): Promise<number | number[]>;
     $setItems(items: PickOpenItem[]): Promise<any>;
@@ -188,8 +203,8 @@ export interface QuickOpenMain {
     $input(options: theia.InputBoxOptions, validateInput: boolean): Promise<string | undefined>;
 }
 
-export interface WindowStateExt {
-    $onWindowStateChanged(focus: boolean): void;
+export interface WorkspaceMain {
+    $pickWorkspaceFolder(options: WorkspaceFolderPickOptionsMain): Promise<theia.WorkspaceFolder | undefined>;
 }
 
 export interface WorkspaceExt {
@@ -198,6 +213,10 @@ export interface WorkspaceExt {
 
 export interface DialogsMain {
     $showOpenDialog(options: OpenDialogOptionsMain): Promise<string[] | undefined>;
+}
+
+export interface WindowStateExt {
+    $onWindowStateChanged(focus: boolean): void;
 }
 
 export enum EditorPosition {
@@ -557,6 +576,7 @@ export const PLUGIN_RPC_CONTEXT = {
     COMMAND_REGISTRY_MAIN: <ProxyIdentifier<CommandRegistryMain>>createProxyIdentifier<CommandRegistryMain>('CommandRegistryMain'),
     QUICK_OPEN_MAIN: createProxyIdentifier<QuickOpenMain>('QuickOpenMain'),
     DIALOGS_MAIN: createProxyIdentifier<DialogsMain>('DialogsMain'),
+    WORKSPACE_MAIN: createProxyIdentifier<WorkspaceMain>('WorkspaceMain'),
     MESSAGE_REGISTRY_MAIN: <ProxyIdentifier<MessageRegistryMain>>createProxyIdentifier<MessageRegistryMain>('MessageRegistryMain'),
     TEXT_EDITORS_MAIN: createProxyIdentifier<TextEditorsMain>('TextEditorsMain'),
     DOCUMENTS_MAIN: createProxyIdentifier<DocumentsMain>('DocumentsMain'),
