@@ -123,4 +123,20 @@ export class Path {
     toString(): string {
         return this.raw;
     }
+
+    isEqualOrParent(path: Path): boolean {
+        const value = this.toString();
+        const value2 = path.toString();
+        if (value === value2) {
+            return true;
+        }
+        if (!value || !value2) {
+            return false;
+        }
+        if (this.root && Path.isDrive(this.root.base)) {
+            return value2.startsWith(value);
+        }
+        return value2.toLowerCase().startsWith(value.toLowerCase());
+    }
+
 }
