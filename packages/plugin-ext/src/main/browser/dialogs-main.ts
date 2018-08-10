@@ -16,11 +16,11 @@
 
 import { interfaces } from 'inversify';
 import { RPCProtocol } from '../../api/rpc-protocol';
-import { OpenDialogOptionsMain, DialogsMain } from '../../api/plugin-api';
+import { OpenDialogOptionsMain, SaveDialogOptionsMain, DialogsMain } from '../../api/plugin-api';
 import URI from '@theia/core/lib/common/uri';
-import { DirNode, FileDialogProps, FileDialogFactory } from '@theia/filesystem/lib/browser';
+import { DirNode, OpenFileDialogProps, SaveFileDialogProps, OpenFileDialogFactory, SaveFileDialogFactory } from '@theia/filesystem/lib/browser';
 import { WorkspaceService } from '@theia/workspace/lib/browser';
-import { FileSystem } from '@theia/filesystem/lib/common';
+import { FileSystem, FileStat } from '@theia/filesystem/lib/common';
 import { LabelProvider } from '@theia/core/lib/browser';
 import { UriSelection } from '@theia/core/lib/common/selection';
 
@@ -29,7 +29,9 @@ export class DialogsMainImpl implements DialogsMain {
     private workspaceService: WorkspaceService;
     private fileSystem: FileSystem;
     private labelProvider: LabelProvider;
-    private fileDialogFactory: FileDialogFactory;
+
+    private openFileDialogFactory: OpenFileDialogFactory;
+    private saveFileDialogFactory: SaveFileDialogFactory;
 
     // private activeElement: HTMLElement | undefined;
 
@@ -37,7 +39,9 @@ export class DialogsMainImpl implements DialogsMain {
         this.workspaceService = container.get(WorkspaceService);
         this.fileSystem = container.get(FileSystem);
         this.labelProvider = container.get(LabelProvider);
-        this.fileDialogFactory = container.get(FileDialogFactory);
+
+        this.openFileDialogFactory = container.get(OpenFileDialogFactory);
+        this.saveFileDialogFactory = container.get(SaveFileDialogFactory);
     }
 
     // private cleanUp() {
@@ -47,12 +51,12 @@ export class DialogsMainImpl implements DialogsMain {
     //     this.activeElement = undefined;
     // }
 
-    async $showOpenDialog(options: OpenDialogOptionsMain): Promise<string[] | undefined> {
+    protected async getRootUri(defaultUri: string | undefined): Promise<FileStat | undefined> {
         let rootStat;
 
-        // Try to use preconfigured default URI as root
-        if (options.defaultUri) {
-            rootStat = await this.fileSystem.getFileStat(options.defaultUri);
+        // Try to use default URI as root
+        if (defaultUri) {
+            rootStat = await this.fileSystem.getFileStat(defaultUri);
         }
 
         // Try to use workspace service root if there is no preconfigured URI
@@ -65,7 +69,13 @@ export class DialogsMainImpl implements DialogsMain {
             rootStat = await this.fileSystem.getCurrentUserHome();
         }
 
-        // Fail of root not fount
+        return rootStat;
+    }
+
+    async $showOpenDialog(options: OpenDialogOptionsMain): Promise<string[] | undefined> {
+        const rootStat = await this.getRootUri(options.defaultUri ? options.defaultUri : undefined);
+
+        // Fail if root not fount
         if (!rootStat) {
             throw new Error('Unable to find the rootStat');
         }
@@ -96,7 +106,7 @@ export class DialogsMainImpl implements DialogsMain {
                 }
             }
 
-            // Create dialog props
+            // Create open file dialog props
             const dialogProps = {
                 title: title,
                 openLabel: options.openLabel,
@@ -104,17 +114,50 @@ export class DialogsMainImpl implements DialogsMain {
                 canSelectFolders: options.canSelectFolders,
                 canSelectMany: options.canSelectMany,
                 filters: options.filters
-            } as FileDialogProps;
+            } as OpenFileDialogProps;
 
-            // Open the dialog
-            const dialog = this.fileDialogFactory(dialogProps);
+            // Show open file dialog
+            const dialog = this.openFileDialogFactory(dialogProps);
             dialog.model.navigateTo(rootNode);
             const result = await dialog.open();
 
             // Return the result
             return UriSelection.getUris(result).map(uri => uri.path.toString());
         } catch (error) {
-            console.log(error);
+            console.error(error);
+        }
+
+        return undefined;
+    }
+
+    async $showSaveDialog(options: SaveDialogOptionsMain): Promise<string | undefined> {
+        const rootStat = await this.getRootUri(options.defaultUri ? options.defaultUri : undefined);
+
+        // Fail if root not fount
+        if (!rootStat) {
+            throw new Error('Unable to find the rootStat');
+        }
+
+        // Take the info for root node
+        const rootUri = new URI(rootStat.uri);
+        const name = this.labelProvider.getName(rootUri);
+        const icon = await this.labelProvider.getIcon(rootUri);
+        const rootNode = DirNode.createRoot(rootStat, name, icon);
+
+        try {
+            // Create save file dialog props
+            const dialogProps = {
+                title: 'Save',
+                saveLabel: options.saveLabel,
+                filters: options.filters
+            } as SaveFileDialogProps;
+
+            // Show save file dialog
+            const dialog = this.saveFileDialogFactory(dialogProps);
+            dialog.model.navigateTo(rootNode);
+            return await dialog.open();
+        } catch (error) {
+            console.error(error);
         }
 
         return undefined;

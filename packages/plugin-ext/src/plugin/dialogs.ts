@@ -13,8 +13,8 @@
  *
  * SPDX-License-Identifier: EPL-2.0 OR GPL-2.0 WITH Classpath-exception-2.0
  ********************************************************************************/
-import { PLUGIN_RPC_CONTEXT as Ext, OpenDialogOptionsMain, DialogsMain } from '../api/plugin-api';
-import { OpenDialogOptions } from '@theia/plugin';
+import { PLUGIN_RPC_CONTEXT as Ext, OpenDialogOptionsMain, DialogsMain, SaveDialogOptionsMain } from '../api/plugin-api';
+import { OpenDialogOptions, SaveDialogOptions } from '@theia/plugin';
 import { RPCProtocol } from '../api/rpc-protocol';
 import Uri from 'vscode-uri';
 
@@ -47,6 +47,22 @@ export class DialogsExtImpl {
                 } else {
                     resolve(undefined);
                 }
+            }).catch(reason => {
+                reject(reason);
+            });
+        });
+    }
+
+    showSaveDialog(options: SaveDialogOptions): PromiseLike<Uri | undefined> {
+        const optionsMain = {
+            saveLabel: options.saveLabel,
+            defaultUri: options.defaultUri ? options.defaultUri.path : undefined,
+            filters: options.filters
+        } as SaveDialogOptionsMain;
+
+        return new Promise((resolve, reject) => {
+            this.proxy.$showSaveDialog(optionsMain).then(result => {
+                resolve(Uri.parse('file://' + result));
             }).catch(reason => {
                 reject(reason);
             });
